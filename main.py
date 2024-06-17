@@ -1,7 +1,5 @@
 import tkinter as tk
-import tkinter.messagebox as messagebox
-from tkinter import ttk
-from tkinter import filedialog
+from tkinter import ttk, filedialog, messagebox
 import schedule
 import time
 import threading
@@ -15,6 +13,13 @@ class SchoolBellRingerApp:
 
         self.master = master
         self.master.title("School Bell Ringer")
+        self.master.geometry("600x400")
+        self.master.resizable(True, True)
+
+        # Colors
+        self.background_color = "#f0f0f0"
+        self.foreground_color = "#333333"
+        self.highlight_color = "#4682b4"
 
         # Initialize variables
         self.schedule = []
@@ -32,44 +37,57 @@ class SchoolBellRingerApp:
         self.scheduler_thread.start()
 
     def create_widgets(self):
+        # Set background color
+        self.master.configure(bg=self.background_color)
+
         # Frame for adding schedule
-        self.frame_add_schedule = tk.LabelFrame(self.master, text="Add Schedule")
+        self.frame_add_schedule = ttk.LabelFrame(self.master, text="Add Schedule", relief=tk.RIDGE)
         self.frame_add_schedule.pack(padx=10, pady=5, fill=tk.BOTH, expand=True)
 
         # Day select box
-        tk.Label(self.frame_add_schedule, text="Day:").grid(row=0, column=0, padx=5, pady=5, sticky="e")
+        ttk.Label(self.frame_add_schedule, text="Day:").grid(row=0, column=0, padx=5, pady=5, sticky="e")
         self.day_select = ttk.Combobox(self.frame_add_schedule, values=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
         self.day_select.grid(row=0, column=1, padx=5, pady=5)
         self.day_select.current(0)  # Default to Monday
 
         # Time select box
-        tk.Label(self.frame_add_schedule, text="Time:").grid(row=1, column=0, padx=5, pady=5, sticky="e")
+        ttk.Label(self.frame_add_schedule, text="Time:").grid(row=1, column=0, padx=5, pady=5, sticky="e")
         self.time_select = ttk.Combobox(self.frame_add_schedule, values=self.get_time_options())
         self.time_select.grid(row=1, column=1, padx=5, pady=5)
 
         # Sound upload button
-        self.sound_button = tk.Button(self.frame_add_schedule, text="Upload Sound", command=self.upload_sound)
+        self.sound_button = ttk.Button(self.frame_add_schedule, text="Upload Sound", command=self.upload_sound)
         self.sound_button.grid(row=1, column=2, padx=5, pady=5)
 
         # List box to display schedule
         self.schedule_listbox = tk.Listbox(self.frame_add_schedule, width=50, height=10)
         self.schedule_listbox.grid(row=2, column=0, columnspan=3, padx=5, pady=5)
 
-        # Edit and Delete buttons
-        self.edit_button = tk.Button(self.frame_add_schedule, text="Edit", command=self.edit_schedule)
-        self.edit_button.grid(row=3, column=0, padx=5, pady=5)
-        self.delete_button = tk.Button(self.frame_add_schedule, text="Delete", command=self.delete_schedule)
-        self.delete_button.grid(row=3, column=1, padx=5, pady=5)
+        # Edit, Delete, and Save buttons
+        self.edit_button = ttk.Button(self.frame_add_schedule, text="Edit", command=self.edit_schedule, style="Highlight.TButton")
+        self.edit_button.grid(row=3, column=0, padx=5, pady=5, sticky="ew")
+        self.delete_button = ttk.Button(self.frame_add_schedule, text="Delete", command=self.delete_schedule, style="Highlight.TButton")
+        self.delete_button.grid(row=3, column=1, padx=5, pady=5, sticky="ew")
+        self.save_button = ttk.Button(self.frame_add_schedule, text="Save", command=self.save_schedule, style="Highlight.TButton")
+        self.save_button.grid(row=3, column=2, padx=5, pady=5, sticky="ew")
 
-        # Button to save schedule
-        self.save_button = tk.Button(self.frame_add_schedule, text="Save", command=self.save_schedule)
-        self.save_button.grid(row=4, column=0, columnspan=3, padx=10, pady=10)
+        # Apply custom styles
+        self.apply_styles()
+
+    def apply_styles(self):
+        self.master.option_add("*TCombobox*Listbox*foreground", self.foreground_color)
+        self.master.option_add("*TCombobox*Listbox*background", self.background_color)
+        self.master.option_add("*TEntry*foreground", self.foreground_color)
+        self.master.option_add("*TEntry*background", self.background_color)
+        self.master.option_add("*TButton*foreground", "#FFFFFF")
+        self.master.option_add("*TButton*background", self.highlight_color)
+        self.master.option_add("*TButton*font", ("Arial", 10, "bold"))
 
     def get_time_options(self):
         # Generate time options for combobox
         time_options = []
         for hour in range(24):
-            for minute in range(0, 60, 1):
+            for minute in range(0, 60, 5):
                 time_options.append(f"{hour:02d}:{minute:02d}")
         return time_options
 
@@ -84,7 +102,7 @@ class SchoolBellRingerApp:
         # Get the selected day, time, and sound
         day = self.day_select.get()
         time = self.time_select.get()
-        sound = self.sound_file if hasattr(self, 'sound_file') else ""
+        sound = getattr(self, 'sound_file', '')
 
         # Add new schedule item to the list
         self.schedule.append({"day": day, "time": time, "sound": sound})
@@ -119,22 +137,22 @@ class SchoolBellRingerApp:
             self.edit_window = tk.Toplevel(self.master)
             self.edit_window.title("Edit Schedule")
 
-            tk.Label(self.edit_window, text="Day:").grid(row=0, column=0, padx=5, pady=5, sticky="e")
+            ttk.Label(self.edit_window, text="Day:", font=("Arial", 12, "bold")).grid(row=0, column=0, padx=5, pady=5, sticky="e")
             day_var = tk.StringVar(value=selected_item["day"])
             day_entry = ttk.Combobox(self.edit_window, values=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], textvariable=day_var)
             day_entry.grid(row=0, column=1, padx=5, pady=5)
 
-            tk.Label(self.edit_window, text="Time:").grid(row=1, column=0, padx=5, pady=5, sticky="e")
+            ttk.Label(self.edit_window, text="Time:", font=("Arial", 12, "bold")).grid(row=1, column=0, padx=5, pady=5, sticky="e")
             time_var = tk.StringVar(value=selected_item["time"])
             time_entry = ttk.Combobox(self.edit_window, values=self.get_time_options(), textvariable=time_var)
             time_entry.grid(row=1, column=1, padx=5, pady=5)
 
-            tk.Label(self.edit_window, text="Sound:").grid(row=2, column=0, padx=5, pady=5, sticky="e")
+            ttk.Label(self.edit_window, text="Sound:", font=("Arial", 12, "bold")).grid(row=2, column=0, padx=5, pady=5, sticky="e")
             sound_var = tk.StringVar(value=selected_item["sound"])
-            sound_entry = tk.Entry(self.edit_window, textvariable=sound_var)
+            sound_entry = ttk.Entry(self.edit_window, textvariable=sound_var)
             sound_entry.grid(row=2, column=1, padx=5, pady=5)
 
-            save_button = tk.Button(self.edit_window, text="Save", command=lambda: self.save_edit(selected_index[0], day_entry.get(), time_entry.get(), sound_entry.get()))
+            save_button = ttk.Button(self.edit_window, text="Save", command=lambda: self.save_edit(selected_index[0], day_entry.get(), time_entry.get(), sound_entry.get()), style="Highlight.TButton")
             save_button.grid(row=3, column=0, columnspan=2, padx=5, pady=10)
 
     def save_edit(self, index, day, time, sound):
